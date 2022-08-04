@@ -1,14 +1,16 @@
-import express from "express";
-import cors from "cors";
-import "dotenv/config";
-import startIo from "./utils/socketio.js";
-
+const express = require("express");
 const app = express();
-app.use(cors());
+const http = require("http");
+const { Server } = require("socket.io");
+const cors = require("cors");
+require("dotenv").config();
+const createConnection = require("./utils/socketio.js");
 const port = process.env.PORT;
+const server = http.createServer(app);
+app.use(cors());
 
-startIo();
+createConnection(server, Server);
 
-app.listen(port, () => {
-  console.log(`app is running on port ${port}`);
+server.listen(port, () => {
+  console.log("SERVER IS RUNNING ON " + port);
 });

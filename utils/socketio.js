@@ -1,20 +1,16 @@
-import { createServer } from "http";
-import { Server } from "socket.io";
-import { nanoid } from "nanoid";
+const Generator = require("id-generator");
+const nanoid = new Generator();
 
-const httpServer = createServer();
-const options = {
-  cors: {
-    origin: "*",
-  },
-};
+const createConnection = (server, Server) => {
+  const io = new Server(server, {
+    cors: {
+      origin: "*",
+    },
+  });
 
-const io = new Server(httpServer, options);
+  let users = [];
+  let rooms = [];
 
-const users = [];
-const rooms = [];
-
-const startIo = () => {
   io.on("connection", (socket) => {
     socket.emit("me", socket.id);
     users.push(socket.id);
@@ -41,8 +37,9 @@ const startIo = () => {
     });
 
     socket.on("joinRoom", (room) => {
-      socket.join(room);
+      socket.join(room.id);
     });
+    socket.emit("getAllRooms", rooms);
     socket.broadcast.emit("updateRooms", rooms);
 
     socket.on("message", (payload) => {
@@ -57,4 +54,4 @@ const startIo = () => {
   });
 };
 
-export default startIo;
+module.exports = createConnection;
