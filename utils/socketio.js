@@ -1,5 +1,4 @@
-const Generator = require("id-generator");
-const nanoid = new Generator();
+const { nanoid } = require("nanoid");
 
 const createConnection = (server, Server) => {
   const io = new Server(server, {
@@ -27,9 +26,10 @@ const createConnection = (server, Server) => {
     socket.on("createRoom", () => {
       const room = {
         id: nanoid(7),
+        capacity: 10,
+        usersJoined: [socket.id],
         chat: [],
       };
-
       socket.join(room);
       socket.emit("getRoom", room);
       rooms.push(room);
@@ -39,6 +39,7 @@ const createConnection = (server, Server) => {
     socket.on("joinRoom", (room) => {
       socket.join(room.id);
     });
+
     socket.emit("getAllRooms", rooms);
     socket.broadcast.emit("updateRooms", rooms);
 
@@ -47,9 +48,12 @@ const createConnection = (server, Server) => {
         if (room.id === payload.room) {
           singleChat = { message: payload.message, writer: payload.socketId };
           room.chat.push(singleChat);
+          payload.chat = room.chat;
         }
       });
       io.to(payload.room).emit("chat", payload);
+      socket.emit("getAllRooms", rooms);
+      socket.broadcast.emit("updateRooms", rooms);
     });
   });
 };
